@@ -13,3 +13,10 @@
   .band .st--live .st__nav { left: max(var(--gutter), calc((100vw - var(--maxw)) / 2)); right: max(var(--gutter), calc((100vw - var(--maxw)) / 2)); width: auto; }
 }
 .labtag { position: fixed; left: 12px; bottom: 12px; z-index: 60; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: rgba(245, 244, 237, .92); border: 1px solid var(--line); padding: 6px 10px; text-decoration: none; }
+
+/* Variant: the band below the text (html.band.low) */
+@media (min-width: 768px) {
+  .band.low .st--live .st__panel { top: auto; bottom: 0; height: 38%; }
+  .band.low .st--live .st__grid { top: 0; bottom: calc(38% + clamp(52px, 8vh, 72px)); }
+  .band.low .st--live .st__nav { bottom: calc(38% + 10px); }
+}
