@@ -1,0 +1,220 @@
+/* Homepage scene and blocks: the first part of the page is one pinned screen; scrolling turns chapters. Loaded after site.css. */
+
+
+/* ---------- Static layout (no WebGL, reduced motion, or before the script runs) ---------- */
+.st { position: relative; background: var(--cream); }
+.st__stage { position: relative; }
+.st__panel { position: relative; height: 200px; background: var(--ink); overflow: hidden; }
+.st__panel::after { content: none; }   /* the carpets carry the ornament now: no lattice wallpaper behind them */
+.st__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+.st__chain { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; z-index: 1; }
+.st__chain img { width: 84px; height: 84px; margin-right: -26px; }
+.st__grid { padding-block: 40px var(--pad); }
+.chap + .chap { margin-top: 56px; }
+.chap .h1 { margin-bottom: 20px; max-width: 13em; }
+.chap .h2 { margin-bottom: 16px; max-width: 16em; }
+.chap .lead { margin-bottom: 0; }
+.chap .btns { margin-top: 28px; }
+.chap__n { margin-left: 6px; color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+.st__proof { list-style: none; margin: 32px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: grid; gap: 10px; font-size: 14px; line-height: 1.45; font-weight: 500; max-width: 34em; }
+.st__proof li { display: flex; gap: 12px; align-items: flex-start; }
+.st__proof .proof__mark { flex: none; width: 9px; height: 9px; margin-top: 5px; border: 1.5px solid var(--accent); transform: rotate(45deg); }
+.st__proof .link { padding: 0; font-size: 14px; }
+.st__fee { margin: 18px 0 0; font-size: 16px; font-weight: 500; line-height: 1.5; max-width: 34em; }
+.st__note { margin: 20px 0 0; font-size: 14px; color: var(--muted); max-width: 36em; }
+.st__nav { display: none; }
+
+/* ---------- Pinned story (set by story.js) ---------- */
+.st--live .st__track { height: var(--st-h, 520vh); }
+.st--live .st__stage { position: sticky; top: var(--hdr); height: calc(100vh - var(--hdr)); height: calc(100svh - var(--hdr)); overflow: hidden; }
+.st--live .st__chain { display: none; }
+.st--live .st__grid { position: relative; height: 100%; padding-block: 0; }
+.st--live .st__text { position: relative; height: 100%; }
+.st--live .chap { position: absolute; left: 0; right: 0; margin: 0; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .45s var(--ease), visibility 0s .45s; }
+.st--live .chap > * { transform: translateY(14px); transition: transform .6s var(--ease); }
+.st--live .chap.is-on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .6s var(--ease) .12s, visibility 0s; }
+.st--live .chap.is-on > * { transform: none; }
+.st--live .chap.is-on > :nth-child(2) { transition-delay: .06s; }
+.st--live .chap.is-on > :nth-child(3) { transition-delay: .12s; }
+.st--live .chap.is-on > :nth-child(4) { transition-delay: .18s; }
+.st--live .chap.is-on > :nth-child(5) { transition-delay: .24s; }
+.st--live .chap.is-on > :nth-child(6) { transition-delay: .3s; }
+.st--live .st__nav { display: flex; position: absolute; z-index: 3; align-items: center; justify-content: space-between; gap: 16px; }
+.st__skip { display: inline-flex; align-items: center; gap: 10px; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); text-decoration: none; padding: 10px 0; background: none; border: 0; cursor: pointer; }
+.st__skip:hover { color: var(--accent-ink); }
+.st__skip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.st__skip .ico { width: 15px; height: 15px; color: var(--accent); transform: rotate(90deg); }
+.st__next .ico { animation: st-nudge 2.4s var(--ease) infinite; }
+@keyframes st-nudge { 0%, 60%, 100% { transform: rotate(90deg) translateX(0); } 30% { transform: rotate(90deg) translateX(4px); } }
+/* The first screen invites into the story; inside it the way out is to skip it */
+.st[data-chap="0"] .st__out, .st:not([data-chap="0"]) .st__next { display: none; }
+.st__skip { white-space: nowrap; }
+.st__narrow { display: none; }
+@media (max-width: 767px) { .st__wide { display: none; } .st__narrow { display: inline; } }
+/* Names under the small tiles, so they read as the other chapters (desktop) */
+.st__tl { position: absolute; left: 0; top: 0; z-index: 2; margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: var(--on-dark-muted); opacity: 0; transition: opacity .35s, color .25s; pointer-events: none; }
+.st__tl.is-on { opacity: 1; }
+.st__tl.is-hot { color: var(--cream); }
+@media (max-width: 767px) { .st__tl { display: none; } }
+.st__dots { display: flex; gap: 6px; }
+.st__dots button { width: 26px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.st__dots button::before { content: ''; width: 8px; height: 8px; border: 1.5px solid var(--muted); transform: rotate(45deg); transition: background-color .3s, border-color .3s, transform .3s; }
+.st__dots button[aria-current]::before { background: var(--accent); border-color: var(--accent); transform: rotate(45deg) scale(1.25); }
+.st__dots button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.st__canvas.is-hover { cursor: pointer; }
+
+/* Phones and tablets: tiles on top, the chapter text below */
+@media (max-width: 767px) {
+  .st--live .st__panel { position: absolute; left: 0; right: 0; top: 0; height: 32%; }
+  .st--live .st__grid { position: absolute; left: 0; right: 0; top: 32%; bottom: 52px; height: auto; }
+  .st--live .st__note { display: none; }   /* phones: the screen holds one thought; the note lives in the static layout and on the services page */
+  .st--live .st__fee { font-size: 15px; margin-top: 12px; }
+  .st--live .chap { top: 20px; }
+  .st--live .chap .h1 { font-size: clamp(26px, 7.4vw, 34px); margin-bottom: 12px; }
+  .st--live .chap .lead { font-size: 15.5px; line-height: 1.5; }
+  .st--live .chap .btns { margin-top: 18px; flex-wrap: nowrap; gap: 8px; }
+  .st--live .chap .btns .btn { flex: 1 1 0; min-height: 46px; padding: 10px 12px; font-size: 15px; }
+  .st--live .st__proof { margin-top: 18px; padding-top: 12px; gap: 6px; font-size: 13px; }
+  .st--live .st__proof .link { font-size: 13px; }
+  .st--live .st__nav { left: var(--gutter); right: var(--gutter); bottom: 8px; }
+}
+/* Desktop: text left, graphite panel with the tiles right */
+@media (min-width: 768px) {
+  .st__panel { height: 360px; }
+  .st--live .st__panel { position: absolute; top: 0; bottom: 0; left: 50%; right: 0; height: auto; }
+  .st--live .st__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 64px; }
+  .st--live .chap { top: 50%; transform: translateY(-50%); right: 24px; }
+  .st--live .st__nav { left: max(var(--gutter), calc((100vw - var(--maxw)) / 2)); width: calc(50% - max(var(--gutter), calc((100vw - var(--maxw)) / 2)) - 24px); bottom: clamp(16px, 4vh, 36px); }
+}
+
+/* Playing with a tile: drag it, break it on the panel edge, click the pieces to mend it */
+.st__canvas.is-hover { cursor: grab; }
+.st__canvas.is-drag { cursor: grabbing; }
+.st__canvas.is-shard { cursor: pointer; }
+.st__hint { position: absolute; z-index: 2; left: 0; right: 0; bottom: 18px; margin: 0; text-align: center; font-size: 12.5px; letter-spacing: .02em; color: var(--on-dark-muted); opacity: 0; transition: opacity .5s; pointer-events: none; }
+.st__hint.is-on { opacity: 1; }
+@media (max-width: 767px) { .st__hint { display: none; } }
+
+/* Split layout on short screens (laptops, small windows): everything of a chapter fits between header and dots */
+@media (min-width: 768px) and (max-height: 860px) {
+  .st--live .chap .kicker { margin-bottom: 12px; }
+  .st--live .chap .h1 { font-size: clamp(26px, 5vh, 42px); margin-bottom: 12px; }
+  .st--live .chap .h2 { font-size: clamp(24px, 4.6vh, 34px); margin-bottom: 12px; }
+  .st--live .chap .lead { font-size: 16px; line-height: 1.5; }
+  .st--live .chap .btns { margin-top: 18px; gap: 10px; }
+  .st--live .chap .btn { min-height: 44px; padding: 10px 18px; font-size: 15px; }
+  .st--live .st__proof { margin-top: 16px; padding-top: 12px; gap: 6px; font-size: 13px; }
+  .st--live .st__proof .link { font-size: 13px; }
+}
+/* Chapters are centred in the space above the skip link and the dots, not over them */
+@media (min-width: 768px) { .st--live .st__text { height: calc(100% - clamp(56px, 9vh, 84px)); } }
+
+/* ---------- Below the story (lab overrides of site.css) ---------- */
+
+/* Services: the formats differ by who makes the decisions */
+.sv { display: grid; gap: 16px; }
+.sv__main { position: relative; display: flex; flex-direction: column; padding: 32px 28px 30px; overflow: hidden; }
+.sv__main::after { content: ''; position: absolute; inset: 0; background: url(orn-lattice.svg) right bottom / 120px repeat; opacity: .06; pointer-events: none; -webkit-mask-image: linear-gradient(135deg, transparent 45%, #000); mask-image: linear-gradient(135deg, transparent 45%, #000); }
+.sv__main > * { position: relative; z-index: 1; }
+.sv__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+.sv__tile { width: 56px; height: 56px; flex: none; }
+.sv__tile--sm { width: 40px; height: 40px; }
+.sv__tag { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-dark); }
+.sv__title { margin: 0 0 12px; font-size: 24px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; }
+.sv__title--sm { font-size: 19px; margin-bottom: 8px; }
+.sv__who { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--accent-ink); }
+.sv__main .sv__who { color: var(--accent-dark); margin-bottom: 16px; }
+.sv__scale { display: inline-flex; gap: 4px; flex: none; }
+.sv__scale b { width: 7px; height: 7px; border: 1.5px solid currentColor; transform: rotate(45deg); }
+.sv__scale[data-n="3"] b, .sv__scale[data-n="2"] b:nth-child(-n+2), .sv__scale[data-n="1"] b:first-child { background: currentColor; }
+.sv__txt { margin: 0; font-size: 15.5px; line-height: 1.6; }
+.sv__main .sv__txt { font-size: 16.5px; max-width: 30em; }
+.sv__more { align-self: flex-start; margin-top: auto; padding-top: 28px; font-size: 15px; }
+.sv__alt { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 24px 22px; background: var(--paper); border: 1px solid var(--line); }
+@media (min-width: 900px) {
+  .sv { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-rows: auto auto; gap: 20px; }
+  .sv__main { grid-row: span 2; padding: 40px 40px 36px; }
+  .sv__alt { grid-template-columns: 40px minmax(0, 1fr); padding: 30px 32px; gap: 22px; }
+}
+
+/* Quarterly report: a schematic sheet with numbered parts, linked to the list */
+.rep__grid { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "doc" "body"; gap: 32px; }
+.rep__head { grid-area: head; }
+.rep__doc { grid-area: doc; display: flex; justify-content: center; }
+.rep__body { grid-area: body; }
+.rep__head .h2 { margin-bottom: 18px; max-width: 15em; }
+.rep__head .lead { margin: 0; }
+.rep__list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-strong); }
+.rep__list li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line-strong); }
+.rep__n, .doc__n { position: relative; isolation: isolate; display: grid; place-items: center; flex: none; font-weight: 700; color: var(--ink); }
+.rep__n { width: 26px; height: 26px; font-size: 12px; }
+.rep__n::before, .doc__n::before { content: ''; position: absolute; inset: 15%; z-index: -1; border: 1.5px solid var(--ink); background: transparent; transform: rotate(45deg); transition: background-color .3s, border-color .3s; }
+.rep__list li.is-on .rep__n::before, .doc__sec.is-on .doc__n::before { background: var(--accent); border-color: var(--accent); }
+.rep__list .h3 { font-size: 17px; margin: 2px 0 6px; }
+.rep__list p { margin: 0; font-size: 15px; line-height: 1.55; }
+.rep__note { margin: 20px 0 0; padding-left: 44px; font-size: 15px; color: var(--muted); }
+
+.doc { width: 100%; max-width: 440px; padding: 26px 28px 30px; background: #fff; border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(37, 40, 45, .05), 0 22px 44px -18px rgba(37, 40, 45, .22); color: var(--ink); }
+.doc__head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; margin-bottom: 18px; border-bottom: 1px solid var(--line); }
+.doc__logo { width: 100px; height: 20px; color: var(--ink); }
+.doc__stamp { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-ink); border: 1px solid currentColor; padding: 3px 7px; }
+.doc__title { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+.sk { display: block; height: 6px; background: rgba(37, 40, 45, .12); }
+.sk--n { width: 52px; margin-left: auto; flex: none; }
+.sk--b { height: 7px; background: rgba(37, 40, 45, .34); }
+.doc__sec { margin: 16px -12px 0; padding: 10px 12px 8px; transition: opacity .35s, background-color .35s, box-shadow .35s; }
+.doc__h { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 12px; font-weight: 600; }
+.doc__n { width: 20px; height: 20px; font-size: 10px; }
+.doc__bar { display: flex; gap: 2px; height: 9px; margin: 0 0 6px; }
+.doc__bar i { display: block; }
+.doc__row { display: flex; align-items: center; gap: 10px; height: 19px; border-bottom: 1px solid rgba(37, 40, 45, .07); }
+.doc__row:last-child { border-bottom: 0; }
+.doc__dot, .doc__mk { width: 7px; height: 7px; flex: none; transform: rotate(45deg); }
+.doc__mk { border: 1px solid var(--line-strong); }
+.doc__row--total { margin-top: 2px; border-top: 1px solid var(--line-strong); font-size: 11px; font-weight: 600; }
+.rep.has-on .doc__sec:not(.is-on) { opacity: .35; }
+.doc__sec.is-on { background: rgba(234, 92, 61, .06); box-shadow: inset 2px 0 0 var(--accent); }
+@media (hover: hover) { .rep__list li, .doc__sec { cursor: default; } }
+@media (min-width: 1024px) {
+  .rep__grid { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); grid-template-areas: "head doc" "body doc"; gap: 0 80px; align-items: start; }
+  .rep__head { margin-bottom: 36px; }
+  .rep__doc { justify-content: flex-end; position: sticky; top: calc(var(--hdr) + 32px); }
+}
+
+/* How to start now sits on cream: the step diamonds mask the line with the section colour */
+.section:not(.tint) .step::after { background: var(--cream); }
+
+/* Until the scene starts, show only the first chapter, so nothing stacks up on load (no CLS).
+   The head script sets .gl only when WebGL is available; story.js removes it if the scene fails. */
+.gl .st:not(.st--live) .chap:not([data-chap="0"]) { display: none; }
+
+/* Finale «Сшивание»: a cord runs round the four felts closed into one, then a woven tag with the mark */
+.st__seam { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; overflow: visible; }
+.st__cord { fill: none; stroke: #f2c230; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: var(--len, 2000); stroke-dashoffset: var(--len, 2000); opacity: 0; }
+.st__cord--in { stroke: rgba(242, 194, 48, .55); stroke-width: 1.5; stroke-dasharray: 5 4; stroke-dashoffset: 0; }
+.st__tag { opacity: 0; transform: scale(.85); }
+.st__tag rect { fill: #ece5d8; stroke: #f2c230; stroke-width: 2; }
+.st__tag use { color: #25282d; fill: #25282d; }
+.st__seam.is-on .st__cord { opacity: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.15s cubic-bezier(.45, 0, .2, 1), opacity .15s; }
+.st__seam.is-on .st__cord--in { opacity: 1; transition: opacity .5s ease .9s; }
+.st__seam.is-on .st__tag { opacity: 1; transform: none; transition: opacity .35s ease 1.15s, transform .45s cubic-bezier(.2, .8, .2, 1.2) 1.15s; }
+@media (prefers-reduced-motion: reduce) { .st__seam.is-on .st__cord, .st__seam.is-on .st__cord--in, .st__seam.is-on .st__tag { transition: opacity .3s; } }
+
+/* Carpet as a system below the scene: a woven border (kaima) in three places, stitches instead of
+   some hairlines, and the four chapter colours carried down into the steps. */
+.kaima { height: 16px; background: url(kaima.svg) left center / auto 16px repeat-x; }
+.footer { position: relative; }
+.footer::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 16px; background: url(kaima.svg) left center / auto 16px repeat-x; }
+.doc { position: relative; padding-top: 34px; }
+.doc::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 12px; background: url(kaima.svg) left center / auto 12px repeat-x; }
+.step__line { background: repeating-linear-gradient(to bottom, var(--ink) 0 4px, transparent 4px 8px); width: 1.5px; opacity: .55; }
+@media (min-width: 1024px) { .step__line { background: repeating-linear-gradient(to right, var(--ink) 0 4px, transparent 4px 8px); width: auto; height: 1.5px; } }
+.step:nth-child(1)::after { border-color: #cb3131; }
+.step:nth-child(2)::after { border-color: #e8962f; }
+.step:nth-child(3)::after { border-color: #292c7a; }
+.step:nth-child(4)::after { border-color: #c99a12; }
+.sv__main::before { content: ''; position: absolute; inset: 10px; border: 1.5px dashed rgba(236, 229, 216, .28); pointer-events: none; }
+
+/* Animations off in the system: the scene still works, chapters just swap with a short fade */
+html:not(.motion) .st--live .chap, html:not(.motion) .st--live .chap.is-on { transition: opacity .2s linear, visibility 0s; }
+html:not(.motion) .st--live .chap > * { transform: none; transition: none; }
