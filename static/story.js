@@ -100,7 +100,7 @@ async function start() {
   const QUAD = [[-0.5, 0], [0, 0.5], [0, -0.5], [0.5, 0]];
   // turn: 0 shows the glazed pattern, PI shows the back with the chapter's key point
   function arrangement(k) {
-    const wideShort = camera.aspect > 1.25;           // phones and tablets: a low, wide panel above the text
+    const wideShort = innerWidth < 768;               // phones: a low, wide panel above the text (CSS switches at 768 too); wide desktops keep the side layout
     const visW = VIS_H * camera.aspect;
     if (k === 0) {
       const span = 1 + 3 * STEP;                       // row width in diamond widths
