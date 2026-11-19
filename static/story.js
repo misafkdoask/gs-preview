@@ -28,6 +28,8 @@ function webglOK() {
 // The scene is the layout of the first screen, so it runs for everyone with WebGL. With reduced motion
 // (or animations turned off in the system) it stays still: tiles jump to their places, nothing sways.
 const RM = !root.classList.contains('motion');
+// Lab variant "band": the carpets in a wide band above the text on every screen (site/lab/band.html)
+const BAND = root.classList.contains('band');
 if (webglOK()) start().catch((e) => { root.classList.remove('gl'); st.classList.remove('st--live'); console.error(e); });
 else root.classList.remove('gl');
 
@@ -100,8 +102,26 @@ async function start() {
   const QUAD = [[-0.5, 0], [0, 0.5], [0, -0.5], [0.5, 0]];
   // turn: 0 shows the glazed pattern, PI shows the back with the chapter's key point
   function arrangement(k) {
-    const wideShort = innerWidth < 768;               // phones: a low, wide panel above the text (CSS switches at 768 too); wide desktops keep the side layout
+    const wideShort = BAND || innerWidth < 768;             // phones: a low, wide panel above the text (CSS switches at 768 too); wide desktops keep the side layout
     const visW = VIS_H * camera.aspect;
+    if (BAND && innerWidth >= 768) {                  // lab variant: a wide band above the text
+      if (k === 0) {
+        const dg = Math.min(VIS_H * 0.62, (visW - 2) / (1 + 3 * STEP)), s = dg / Math.SQRT2;
+        return HERO.map((c, j) => ({ x: (j - 1.5) * STEP * dg, y: c.dy * s, z: c.z, s, rx: c.rx * 0.6, ry: c.ry * 0.6, turn: 0, sq: 0, focus: false }));
+      }
+      if (k >= 1 && k <= 4) {
+        const f = k - 1, S = VIS_H * 0.68;
+        let n = 0;
+        return [0, 1, 2, 3].map((j) => {
+          const shift = (1.5 + 2 * 1.8 + 0.5) / 2;           // centre the card with the three small tiles beside it
+          if (j === f) return { x: -shift, y: 0, z: 0.4, s: S, rx: 0.02, ry: -0.04, turn: Math.PI, sq: 1, focus: true };
+          const o = n++;
+          return { x: S / 2 + 1.5 + o * 1.8 - shift, y: 0.1, z: 0, s: 0.7, rx: 0, ry: 0, turn: 0, sq: 0, focus: false };
+        });
+      }
+      const s = VIS_H * 0.27, D = s * Math.SQRT2 * 1.004;
+      return QUAD.map((q) => ({ x: q[0] * D, y: q[1] * D, z: 0.2, s, rx: 0, ry: 0, turn: 0, sq: 0, focus: false }));
+    }
     if (k === 0) {
       const span = 1 + 3 * STEP;                       // row width in diamond widths
       const dg = Math.min(VIS_H * (wideShort ? 0.34 : 0.17), (visW - (wideShort ? 1.4 : 0.9)) / span);
@@ -242,7 +262,9 @@ async function start() {
       t.t0 = now + (a[i].focus ? 140 : i * 60);
     });
   }
+  let pinned = -1;                                   // debug: a chapter shown without scrolling (screenshots)
   function chapterFromScroll(now) {
+    if (pinned >= 0) return;
     const p = (hdr - track.getBoundingClientRect().top) / L;
     const k = clamp(Math.round(p), 0, N - 1);
     if (cur < 0 || Math.abs(p - cur) > 0.55) setChapter(k, now);
@@ -572,6 +594,7 @@ async function start() {
 
   // Debug hooks for checking frames in a hidden preview pane
   window.__story = {
+    pin(k) { pinned = k; setChapter(k, performance.now()); },
     go(k) { goTo(k, 'instant'); },
     settle() { const t = performance.now() + 5000; tiles.forEach((x) => { x.t0 = t - 5000 - TW; }); frame(t); },
     frame() { frame(performance.now()); },
@@ -646,6 +669,7 @@ function backCanvas(i, N, plain = false) {
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   const text = (s, y, size, weight, color, ls = 0, x = 0) => {
+    if (BAND && weight === 500) return;                 // band: the card is small, only the label and the big words
     g.font = weight + ' ' + Math.round(size * u) + 'px Montserrat, Arial, sans-serif';
     if ('letterSpacing' in g) g.letterSpacing = Math.round(ls * u) + 'px';
     const maxW = 620 * u;                              // long lines shrink to fit inside the border
@@ -673,7 +697,7 @@ function backCanvas(i, N, plain = false) {
     label(L('СДЕЛКИ', 'DEALS'), -250);
     text(L('Частные', 'Private'), -150, 90, 700, INK);
     text(L('сделки', 'deals'), -54, 90, 700, ACC);
-    (EN ? ['at your request', 'term and risks up front', 'settled by a bank or broker'] : ['по вашему запросу', 'срок и риски заранее', 'расчёты: банк или брокер']).forEach((w, k) => {
+    if (!BAND) (EN ? ['at your request', 'term and risks up front', 'settled by a bank or broker'] : ['по вашему запросу', 'срок и риски заранее', 'расчёты: банк или брокер']).forEach((w, k) => {
       const y = 70 + k * 64, x = -250;
       mark(x, y, 12, k === 1 ? ACC : null, k === 1 ? null : INK);
       g.save(); g.textAlign = 'left';
@@ -712,7 +736,7 @@ function backCanvas(i, N, plain = false) {
     const ws = items.map((it) => g.measureText(it[0]).width / u);
     const total = ws[0] + ws[1] + 2 * (22 + 26) + 56;
     let x = -total / 2;
-    items.forEach((it, k) => {
+    if (!BAND) items.forEach((it, k) => {
       mark(x + 11, 236, 11, it[1], null);
       g.fillStyle = MUTED; g.fillText(it[0], (x + 22 + 26) * u, 236 * u);
       x += 22 + 26 + ws[k] + 56;
