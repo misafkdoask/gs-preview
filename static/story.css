@@ -219,6 +219,3 @@
 html:not(.motion) .st--live .chap, html:not(.motion) .st--live .chap.is-on { transition: opacity .2s linear, visibility 0s; }
 html:not(.motion) .st--live .chap > * { transform: none; transition: none; }
 .st__tag { display: none; }   /* finale: the four felts and the cord are enough, no badge in the centre */
-
-/* Hero headline: the second sentence fits on one line on laptops (it breaks after the first sentence) */
-@media (min-width: 768px) { .st--live .chap .h1 { font-size: min(clamp(26px, 5vh, 44px), 2.85vw); } }
