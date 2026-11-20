@@ -118,13 +118,13 @@ async function start() {
         return HERO.map((c, j) => ({ x: (j - 1.5) * STEP * dg, y: c.dy * s, z: c.z, s, rx: c.rx * 0.6, ry: c.ry * 0.6, turn: 0, sq: 0, focus: false }));
       }
       if (k >= 1 && k <= 4) {
-        const f = k - 1, S = VIS_H * 0.8;
+        const f = k - 1, S = VIS_H * 0.7;
         let n = 0;
         return [0, 1, 2, 3].map((j) => {
-          const shift = (1.5 + 2 * 1.8 + 0.5) / 2;           // centre the card with the three small tiles beside it
+          const shift = (1.6 + 2 * 2.0 + 0.7) / 2;           // centre the card with the three small tiles beside it
           if (j === f) return { x: -shift, y: 0, z: 0.4, s: S, rx: 0.02, ry: -0.04, turn: Math.PI, sq: 1, focus: true };
           const o = n++;
-          return { x: S / 2 + 1.5 + o * 1.8 - shift, y: 0.1, z: 0, s: 0.7, rx: 0, ry: 0, turn: 0, sq: 0, focus: false };
+          return { x: S / 2 + 1.6 + o * 2.0 - shift, y: 0.1, z: 0, s: 0.95, rx: 0, ry: 0, turn: 0, sq: 0, focus: false };
         });
       }
       const s = VIS_H * 0.27, D = s * Math.SQRT2 * 1.004;
