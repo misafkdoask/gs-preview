@@ -132,7 +132,7 @@ async function start() {
     }
     if (k === 0) {
       const span = 1 + 3 * STEP;                       // row width in diamond widths
-      const dg = Math.min(VIS_H * (wideShort ? 0.34 : 0.17), (visW - (wideShort ? 1.4 : 0.9)) / span);
+      const dg = Math.min(VIS_H * (wideShort ? 0.34 : 0.21), (visW - (wideShort ? 1.4 : 0.9)) / span);
       const s = dg / Math.SQRT2;
       return HERO.map((c, j) => ({ x: (j - 1.5) * STEP * dg, y: (wideShort ? 0 : 0.1) + c.dy * s, z: c.z, s, rx: c.rx, ry: c.ry, turn: 0, sq: 0, focus: false }));
     }
