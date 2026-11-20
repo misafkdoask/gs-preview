@@ -737,8 +737,8 @@ function backCanvas(i, N, plain = false, img = null) {
     label(L('СТРУКТУРА', 'STRUCTURE'), -250);
     text(L('Портфель', 'A portfolio'), -120, 104, 700, INK);
     text(L('под вашу структуру', 'built on your structure'), -6, 72, 700, INK);
-    text(L('Учитываем, на кого и где', 'We take into account whose'), 130, 50, 500, MUTED);
-    text(L('оформлены активы', 'name the assets are in, and where'), 184, 50, 500, MUTED);
+    text(L('Учитываем, где и в каких', 'We take into account where'), 130, 50, 500, MUTED);
+    text(L('валютах хранятся активы', 'and in which currencies you hold assets'), 184, 50, 500, MUTED);
   } else if (i === 1) {     // private deals that are not on an exchange
     label(L('СДЕЛКИ', 'DEALS'), -250);
     text(L('Частные', 'Private'), -150, 90, 700, INK);
