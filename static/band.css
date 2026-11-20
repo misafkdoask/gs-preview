@@ -1,7 +1,7 @@
 /* Lab variant: the carpets in a wide graphite band above the text on every screen, as on the brandbook cover */
 @media (min-width: 768px) {
-  .band .st--live .st__panel { left: 0; right: 0; top: 0; bottom: auto; height: 40%; }
-  .band .st--live .st__grid { position: absolute; left: 0; right: 0; top: 40%; bottom: clamp(56px, 9vh, 84px); height: auto; display: block; }
+  .band .st--live .st__panel { left: 0; right: 0; top: 0; bottom: auto; height: 44%; }
+  .band .st--live .st__grid { position: absolute; left: 0; right: 0; top: 44%; bottom: clamp(56px, 9vh, 84px); height: auto; display: block; }
   .band .st--live .st__text { height: 100%; max-width: 1040px; }
   .band .st--live .chap { top: 50%; transform: translateY(-50%); right: 0; }
   .band .st--live .chap .kicker { margin-bottom: 10px; }

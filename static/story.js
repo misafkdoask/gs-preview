@@ -118,7 +118,7 @@ async function start() {
         return HERO.map((c, j) => ({ x: (j - 1.5) * STEP * dg, y: c.dy * s, z: c.z, s, rx: c.rx * 0.6, ry: c.ry * 0.6, turn: 0, sq: 0, focus: false }));
       }
       if (k >= 1 && k <= 4) {
-        const f = k - 1, S = VIS_H * 0.68;
+        const f = k - 1, S = VIS_H * 0.8;
         let n = 0;
         return [0, 1, 2, 3].map((j) => {
           const shift = (1.5 + 2 * 1.8 + 0.5) / 2;           // centre the card with the three small tiles beside it
@@ -231,6 +231,23 @@ async function start() {
 
   const trackTop = () => track.getBoundingClientRect().top + scrollY;
   function goTo(k, behavior = 'smooth') { scrollTo({ top: k ? trackTop() - hdr + k * L : 0, behavior }); }
+  // One wheel gesture turns one chapter, so a fast flick cannot skip a tile. Momentum keeps the lock on until the
+  // gesture stops. Leaving the finale waits until the cord has run round the stitched diamond.
+  let wheelLock = 0, leaveAt = 0;
+  addEventListener('wheel', (e) => {
+    if (e.ctrlKey || cur < 0) return;
+    const r = track.getBoundingClientRect();
+    if (r.top > hdr + 60 || r.bottom < innerHeight) return;          // the scene is not on screen
+    const dir = Math.sign(e.deltaY);
+    if (!dir || (dir < 0 && cur === 0)) return;
+    const now = performance.now();
+    if (dir > 0 && cur === N - 1 && now >= leaveAt) return;            // after the finale the page scrolls on
+    e.preventDefault();
+    if (now < wheelLock) { wheelLock = Math.max(wheelLock, now + 220); return; }
+    wheelLock = now + (RM ? 450 : 1000);
+    const k = clamp(cur + dir, 0, N - 1);
+    if (k !== cur) goTo(k);
+  }, { passive: false });
   [...dots, ...st.querySelectorAll('.st__next')].forEach((d) => d.addEventListener('click', () => goTo(+d.dataset.go)));
   st.addEventListener('focusin', (e) => {           // keyboard: focusing a link in another chapter opens that chapter
     const c = e.target.closest('.chap');
@@ -243,6 +260,7 @@ async function start() {
     cur = k;
     st.dataset.chap = k;
     if (k === 5) seamAt = now + TW + 300; else hideSeam();
+    if (k === N - 1) leaveAt = now + TW + 300 + 1400;
     chaps.forEach((c, i) => { c.classList.toggle('is-on', i === k); c.toggleAttribute('inert', i !== k); });
     dots.forEach((d, i) => { if (i === k) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current'); });
     const a = arrangement(k);
@@ -698,7 +716,6 @@ function backCanvas(i, N, plain = false, img = null) {
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   const text = (s, y, size, weight, color, ls = 0, x = 0) => {
-    if (BAND && weight === 500) return;                 // band: the card is small, only the label and the big words
     g.font = weight + ' ' + Math.round(size * u) + 'px Montserrat, Arial, sans-serif';
     if ('letterSpacing' in g) g.letterSpacing = Math.round(ls * u) + 'px';
     const maxW = 620 * u;                              // long lines shrink to fit inside the border
@@ -726,7 +743,7 @@ function backCanvas(i, N, plain = false, img = null) {
     label(L('СДЕЛКИ', 'DEALS'), -250);
     text(L('Частные', 'Private'), -150, 90, 700, INK);
     text(L('сделки', 'deals'), -54, 90, 700, ACC);
-    if (!BAND) (EN ? ['at your request', 'term and risks up front', 'settled by a bank or broker'] : ['по вашему запросу', 'срок и риски заранее', 'расчёты: банк или брокер']).forEach((w, k) => {
+    (EN ? ['at your request', 'term and risks up front', 'settled by a bank or broker'] : ['по вашему запросу', 'срок и риски заранее', 'расчёты: банк или брокер']).forEach((w, k) => {
       const y = 70 + k * 64, x = -250;
       mark(x, y, 12, k === 1 ? ACC : null, k === 1 ? null : INK);
       g.save(); g.textAlign = 'left';
@@ -765,7 +782,7 @@ function backCanvas(i, N, plain = false, img = null) {
     const ws = items.map((it) => g.measureText(it[0]).width / u);
     const total = ws[0] + ws[1] + 2 * (22 + 26) + 56;
     let x = -total / 2;
-    if (!BAND) items.forEach((it, k) => {
+    items.forEach((it, k) => {
       mark(x + 11, 236, 11, it[1], null);
       g.fillStyle = MUTED; g.fillText(it[0], (x + 22 + 26) * u, 236 * u);
       x += 22 + 26 + ws[k] + 56;
