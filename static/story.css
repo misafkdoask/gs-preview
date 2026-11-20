@@ -202,11 +202,11 @@
 
 /* Carpet as a system below the scene: a woven border (kaima) in three places, stitches instead of
    some hairlines, and the four chapter colours carried down into the steps. */
-.kaima { height: 16px; background: url(kaima.svg) left center / auto 16px repeat-x; }
+.kaima { display: none; }   /* the bright ornament strips read as a fair: removed */
 .footer { position: relative; }
-.footer::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 16px; background: url(kaima.svg) left center / auto 16px repeat-x; }
-.doc { position: relative; padding-top: 34px; }
-.doc::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 12px; background: url(kaima.svg) left center / auto 12px repeat-x; }
+.footer::before { content: none; }
+.doc { position: relative; }
+.doc::before { content: none; }
 .step__line { background: repeating-linear-gradient(to bottom, var(--ink) 0 4px, transparent 4px 8px); width: 1.5px; opacity: .55; }
 @media (min-width: 1024px) { .step__line { background: repeating-linear-gradient(to right, var(--ink) 0 4px, transparent 4px 8px); width: auto; height: 1.5px; } }
 .step:nth-child(1)::after { border-color: #cb3131; }

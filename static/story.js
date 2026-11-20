@@ -30,6 +30,10 @@ function webglOK() {
 const RM = !root.classList.contains('motion');
 // Lab variant "band": the carpets in a wide band above the text on every screen (site/lab/band.html)
 const BAND = root.classList.contains('band');
+// Preview: how the chapter tile turns over. felt = thick felt with a woven border (first version);
+// thin = a thin card with a hairline frame; dark = a thin graphite card; still = no turn, the tile only comes forward
+const FLIP = ((location.search.match(/[?&]flip=(felt|thin|dark|still)/) || [])[1]) || 'thin';
+const CARD = FLIP !== 'felt';
 if (webglOK()) start().catch((e) => { root.classList.remove('gl'); st.classList.remove('st--live'); console.error(e); });
 else root.classList.remove('gl');
 
@@ -60,7 +64,7 @@ async function start() {
   const EDGE = [0xcb3131, 0xffab48, 0xff6948, 0xffd337];  // each felt is dyed through: the edge is its frame colour
   // The backs carry the key point of each chapter, so the fonts must be ready before drawing them
   try { await Promise.all([document.fonts.load('700 100px Montserrat', 'USDАкции'), document.fonts.load('600 30px Montserrat', 'ВАЛЮТА')]); } catch (e) {}
-  const geo = new RoundedBoxGeometry(1, 1, 0.13, 6, 0.05);
+  const geo = CARD ? new RoundedBoxGeometry(1, 1, 0.035, 2, 0.006) : new RoundedBoxGeometry(1, 1, 0.13, 6, 0.05);
   const aniso = renderer.capabilities.getMaxAnisotropy();
   const fibres = feltCanvas(512);
   const fibreMap = new THREE.CanvasTexture(fibres);
@@ -81,7 +85,7 @@ async function start() {
     backMap.colorSpace = THREE.SRGBColorSpace;
     backMap.anisotropy = aniso;
     const side = felt({ color: EDGE[i] });
-    const mesh = new THREE.Mesh(geo, [side, side, side, side, face, felt({ map: backMap })]);
+    const mesh = new THREE.Mesh(geo, [side, side, side, side, face, CARD ? new THREE.MeshStandardMaterial({ map: backMap, roughness: 0.75 }) : felt({ map: backMap })]);
     mesh.userData.i = i;
     scene.add(mesh);
     return { mesh, i, mats: { face, back: mesh.material[5] }, backMap, cur: null, from: null, to: null, t0: 0, dur: 1100, entry: false, hov: 0, flip: 0, flipT: 0, broken: false, dragging: false };
@@ -102,6 +106,11 @@ async function start() {
   const QUAD = [[-0.5, 0], [0, 0.5], [0, -0.5], [0.5, 0]];
   // turn: 0 shows the glazed pattern, PI shows the back with the chapter's key point
   function arrangement(k) {
+    const a = arrangement0(k);
+    if (FLIP !== 'still' || k < 1 || k > 4) return a;
+    return a.map((t) => (t.focus ? { ...t, turn: 0, sq: 0, s: t.s * 0.78, z: t.z + 0.2 } : t));   // no turn: the chapter tile just comes forward
+  }
+  function arrangement0(k) {
     const wideShort = BAND || innerWidth < 768;             // phones: a low, wide panel above the text (CSS switches at 768 too); wide desktops keep the side layout
     const visW = VIS_H * camera.aspect;
     if (BAND && innerWidth >= 768) {                  // lab variant: a wide band above the text
@@ -326,7 +335,7 @@ async function start() {
     if (t.broken) return;
     if (!d.moved) {
       if (cancelled) return;
-      if (cur === d.i + 1) t.flipT = t.flipT ? 0 : 1;   // the large tile turns over
+      if (cur === d.i + 1) { if (FLIP !== 'still') t.flipT = t.flipT ? 0 : 1; }   // the large tile turns over
       else goTo(d.i + 1);                                // any other tile opens its chapter
       return;
     }
@@ -646,9 +655,14 @@ function backCanvas(i, N, plain = false) {
   c.width = c.height = N;
   const g = c.getContext('2d');
   const u = N / 1024;
-  const INK = '#25282D', MUTED = 'rgba(37, 40, 45, .62)', ACC = '#B83F27', LINE = 'rgba(37, 40, 45, .3)';
-  g.fillStyle = '#ece5d8';
+  const DARK = FLIP === 'dark';
+  const INK = DARK ? '#F5F4ED' : '#25282D', MUTED = DARK ? 'rgba(245, 244, 237, .66)' : 'rgba(37, 40, 45, .62)', ACC = DARK ? '#EA5C3D' : '#B83F27', LINE = DARK ? 'rgba(245, 244, 237, .3)' : 'rgba(37, 40, 45, .3)';
+  g.fillStyle = DARK ? '#2b2e33' : CARD ? '#f4f1ea' : '#ece5d8';
   g.fillRect(0, 0, N, N);
+  if (CARD) {                                          // a card: one hairline frame, nothing else
+    g.strokeStyle = DARK ? 'rgba(214, 178, 96, .8)' : 'rgba(37, 40, 45, .35)'; g.lineWidth = 3 * u;
+    g.strokeRect(70 * u, 70 * u, N - 140 * u, N - 140 * u);
+  } else {
   // a woven border, as on a syrmak: a band in the tile's colour with small diamonds along it
   const edge = BACK_EDGE[i] || BACK_EDGE[0];
   const b = 34 * u, m = 58 * u;
@@ -660,6 +674,7 @@ function backCanvas(i, N, plain = false) {
   const dia = (x, y, r) => { g.beginPath(); g.moveTo(x, y - r); g.lineTo(x + r, y); g.lineTo(x, y + r); g.lineTo(x - r, y); g.closePath(); g.fill(); };
   for (let t = m + step / 2; t < N - m; t += step) {
     dia(t, m + b / 2, 8 * u); dia(t, N - m - b / 2, 8 * u); dia(m + b / 2, t, 8 * u); dia(N - m - b / 2, t, 8 * u);
+  }
   }
   if (plain) return c;
 
