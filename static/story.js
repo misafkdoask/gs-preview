@@ -30,9 +30,10 @@ function webglOK() {
 const RM = !root.classList.contains('motion');
 // Lab variant "band": the carpets in a wide band above the text on every screen (site/lab/band.html)
 const BAND = root.classList.contains('band');
-// Preview: how the chapter tile turns over. felt = thick felt with a woven border (first version);
-// thin = a thin card with a hairline frame; dark = a thin graphite card; still = no turn, the tile only comes forward
-const FLIP = ((location.search.match(/[?&]flip=(felt|thin|dark|still)/) || [])[1]) || 'thin';
+// Preview: the back of the chapter tile. felt = thick felt with a woven border (first version);
+// emboss = cream cotton card, the ornament blind-embossed tone on tone; foil = graphite card with gold foil;
+// mat = cream card with the small original diamond on top, like a museum label
+const FLIP = ((location.search.match(/[?&]flip=(felt|emboss|foil|mat)/) || [])[1]) || 'emboss';
 const CARD = FLIP !== 'felt';
 if (webglOK()) start().catch((e) => { root.classList.remove('gl'); st.classList.remove('st--live'); console.error(e); });
 else root.classList.remove('gl');
@@ -81,11 +82,11 @@ async function start() {
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = aniso;
     const face = felt({ map });
-    const backMap = new THREE.CanvasTexture(backCanvas(i, 1024));
+    const backMap = new THREE.CanvasTexture(backCanvas(i, 1024, false, im));
     backMap.colorSpace = THREE.SRGBColorSpace;
     backMap.anisotropy = aniso;
     const side = felt({ color: EDGE[i] });
-    const mesh = new THREE.Mesh(geo, [side, side, side, side, face, CARD ? new THREE.MeshStandardMaterial({ map: backMap, roughness: 0.75 }) : felt({ map: backMap })]);
+    const mesh = new THREE.Mesh(geo, [side, side, side, side, face, CARD ? new THREE.MeshStandardMaterial({ map: backMap, roughness: FLIP === 'foil' ? 0.55 : 0.85, bumpMap: FLIP === 'emboss' ? backMap : null, bumpScale: 2.2 }) : felt({ map: backMap })]);
     mesh.userData.i = i;
     scene.add(mesh);
     return { mesh, i, mats: { face, back: mesh.material[5] }, backMap, cur: null, from: null, to: null, t0: 0, dur: 1100, entry: false, hov: 0, flip: 0, flipT: 0, broken: false, dragging: false };
@@ -106,9 +107,7 @@ async function start() {
   const QUAD = [[-0.5, 0], [0, 0.5], [0, -0.5], [0.5, 0]];
   // turn: 0 shows the glazed pattern, PI shows the back with the chapter's key point
   function arrangement(k) {
-    const a = arrangement0(k);
-    if (FLIP !== 'still' || k < 1 || k > 4) return a;
-    return a.map((t) => (t.focus ? { ...t, turn: 0, sq: 0, s: t.s * 0.78, z: t.z + 0.2 } : t));   // no turn: the chapter tile just comes forward
+    return arrangement0(k);
   }
   function arrangement0(k) {
     const wideShort = BAND || innerWidth < 768;             // phones: a low, wide panel above the text (CSS switches at 768 too); wide desktops keep the side layout
@@ -335,7 +334,7 @@ async function start() {
     if (t.broken) return;
     if (!d.moved) {
       if (cancelled) return;
-      if (cur === d.i + 1) { if (FLIP !== 'still') t.flipT = t.flipT ? 0 : 1; }   // the large tile turns over
+      if (cur === d.i + 1) { t.flipT = t.flipT ? 0 : 1; }   // the large tile turns over
       else goTo(d.i + 1);                                // any other tile opens its chapter
       return;
     }
@@ -650,18 +649,32 @@ function feltize(c, fibres) {
 // Back of a tile: light undyed felt with a border in the tile's colour and the chapter's key point.
 // When a tile turns over it also squares up, so the back is drawn level and uses the full width.
 const BACK_EDGE = ['#cb3131', '#e8962f', '#ff6948', '#d9a91c'];
-function backCanvas(i, N, plain = false) {
+function backCanvas(i, N, plain = false, img = null) {
   const c = document.createElement('canvas');
   c.width = c.height = N;
   const g = c.getContext('2d');
   const u = N / 1024;
-  const DARK = FLIP === 'dark';
-  const INK = DARK ? '#F5F4ED' : '#25282D', MUTED = DARK ? 'rgba(245, 244, 237, .66)' : 'rgba(37, 40, 45, .62)', ACC = DARK ? '#EA5C3D' : '#B83F27', LINE = DARK ? 'rgba(245, 244, 237, .3)' : 'rgba(37, 40, 45, .3)';
-  g.fillStyle = DARK ? '#2b2e33' : CARD ? '#f4f1ea' : '#ece5d8';
+  const DARK = FLIP === 'foil', GOLD = '#C9A45C';
+  const INK = DARK ? '#F2EEE4' : '#25282D', MUTED = DARK ? 'rgba(242, 238, 228, .66)' : 'rgba(37, 40, 45, .62)', ACC = DARK ? GOLD : '#B83F27', LINE = DARK ? 'rgba(245, 244, 237, .3)' : 'rgba(37, 40, 45, .3)';
+  g.fillStyle = DARK ? '#26292e' : CARD ? '#f3efe6' : '#ece5d8';
   g.fillRect(0, 0, N, N);
-  if (CARD) {                                          // a card: one hairline frame, nothing else
-    g.strokeStyle = DARK ? 'rgba(214, 178, 96, .8)' : 'rgba(37, 40, 45, .35)'; g.lineWidth = 3 * u;
-    g.strokeRect(70 * u, 70 * u, N - 140 * u, N - 140 * u);
+  if (CARD) {
+    const orn = img ? tileCanvas(img, N) : null;
+    if (orn && FLIP !== 'mat') {                 // the tile's own ornament pressed into the card, tone on tone
+      g.save();
+      g.globalAlpha = DARK ? 0.06 : 0.07;
+      g.filter = DARK ? 'grayscale(1) brightness(2.2)' : 'grayscale(1) contrast(1.6)';
+      g.globalCompositeOperation = DARK ? 'screen' : 'multiply';
+      g.drawImage(orn, 0, 0, N, N);
+      g.restore();
+    }
+    if (orn && FLIP === 'mat') {                 // the original diamond in colour, small, as on a museum label
+      const s = 150 * u;
+      g.save(); g.translate(N / 2, 205 * u); g.rotate(Math.PI / 4); g.drawImage(orn, -s / 2, -s / 2, s, s); g.restore();
+    }
+    g.strokeStyle = DARK ? GOLD : 'rgba(37, 40, 45, .32)'; g.lineWidth = (DARK ? 3 : 2.5) * u;
+    g.strokeRect(64 * u, 64 * u, N - 128 * u, N - 128 * u);
+    if (DARK) { g.lineWidth = 1.5 * u; g.strokeRect(80 * u, 80 * u, N - 160 * u, N - 160 * u); }
   } else {
   // a woven border, as on a syrmak: a band in the tile's colour with small diamonds along it
   const edge = BACK_EDGE[i] || BACK_EDGE[0];
@@ -681,6 +694,7 @@ function backCanvas(i, N, plain = false) {
   g.save();
   g.translate(N / 2, N / 2);
   g.scale(1.22, 1.22);                                 // larger type: the square has room for it
+  if (FLIP === 'mat') { g.translate(0, 96 * u); g.scale(0.84, 0.84); }   // text below the small diamond
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   const text = (s, y, size, weight, color, ls = 0, x = 0) => {
@@ -693,7 +707,7 @@ function backCanvas(i, N, plain = false) {
     g.fillStyle = color;
     g.fillText(s, x * u, y * u);
   };
-  const label = (s, y) => text(s, y, 40, 600, MUTED, 7);
+  const label = (s, y) => text(s, y, 40, 600, DARK ? GOLD : MUTED, 7);
   const mark = (x, y, r, fill, stroke) => {           // small diamond
     g.save(); g.translate(x * u, y * u); g.rotate(Math.PI / 4);
     if (fill) { g.fillStyle = fill; g.fillRect(-r * u, -r * u, 2 * r * u, 2 * r * u); }
