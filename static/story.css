@@ -218,3 +218,4 @@
 /* Animations off in the system: the scene still works, chapters just swap with a short fade */
 html:not(.motion) .st--live .chap, html:not(.motion) .st--live .chap.is-on { transition: opacity .2s linear, visibility 0s; }
 html:not(.motion) .st--live .chap > * { transform: none; transition: none; }
+.st__tag { display: none; }   /* finale: the four felts and the cord are enough, no badge in the centre */
