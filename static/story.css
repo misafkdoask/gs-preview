@@ -219,3 +219,4 @@
 html:not(.motion) .st--live .chap, html:not(.motion) .st--live .chap.is-on { transition: opacity .2s linear, visibility 0s; }
 html:not(.motion) .st--live .chap > * { transform: none; transition: none; }
 .st__tag { display: none; }   /* finale: the four felts and the cord are enough, no badge in the centre */
+.gl .st:not(.st--live) .st__chain { visibility: hidden; }   /* the scene will start: no flash of the static diamonds before it */
