@@ -221,3 +221,11 @@ html:not(.motion) .st--live .chap > * { transform: none; transition: none; }
 .st__tag { display: none; }   /* finale: the four felts and the cord are enough, no badge in the centre */
 .gl .st:not(.st--live) .st__chain { visibility: hidden; }   /* the scene will start: no flash of the static diamonds before it */
 .footer__social { display: inline-flex; gap: 20px; margin-left: auto; margin-right: 28px; } .footer__social a { color: inherit; } @media (max-width: 767px) { .footer__social { margin: 0; } }
+
+/* Custody block: three plain statements in columns, a quiet note below */
+.cust__grid { display: grid; gap: 28px; margin-top: 8px; }
+.cust__item { padding-top: 18px; border-top: 1px solid var(--line-strong); }
+.cust__item .h3 { margin: 0 0 10px; }
+.cust__item p { margin: 0; color: var(--ink-soft, #45484d); }
+.cust__note { margin: 28px 0 0; font-size: 13px; color: var(--muted); }
+@media (min-width: 900px) { .cust__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; } }
