@@ -422,7 +422,7 @@
       try { var t = JSON.parse(sessionStorage.getItem(TAGS_KEY) || '{}'); data.source = t.s || ''; data.agent = t.a || ''; data.landing = t.landing || ''; } catch (err) {}
       data.lang = doc.lang; data.page = location.pathname;
       var roleName = { client: 'клиент', partner: 'партнёр', other: 'другое' }[data.role] || data.role || '';
-      data._subject = 'Gesher Finance: заявка с сайта (' + roleName + ')';
+      data._subject = 'Gesher Finance: заявка с сайта (' + roleName + ', ' + (doc.lang || '').toUpperCase() + ')';
       data._replyto = data.email || '';
       sending(true);
       var wait = Math.max(0, 3000 - (Date.now() - started)); // too-fast submits are delayed, not dropped

@@ -743,7 +743,7 @@ function backCanvas(i, N, plain = false, img = null) {
     label(L('СДЕЛКИ', 'DEALS'), -250);
     text(L('Частные', 'Private'), -150, 90, 700, INK);
     text(L('сделки', 'deals'), -54, 90, 700, ACC);
-    (EN ? ['at your request', 'term and risks up front', 'settled by a bank or broker'] : ['по вашему запросу', 'срок и риски заранее', 'расчёты: банк или брокер']).forEach((w, k) => {
+    (EN ? ['at your request', 'term and risks up front', 'participation arranged for you'] : ['по вашему запросу', 'срок и риски заранее', 'организуем участие']).forEach((w, k) => {
       const y = 70 + k * 64, x = -250;
       mark(x, y, 12, k === 1 ? ACC : null, k === 1 ? null : INK);
       g.save(); g.textAlign = 'left';
@@ -752,12 +752,12 @@ function backCanvas(i, N, plain = false, img = null) {
       g.fillStyle = MUTED; g.fillText(w, (x + 40) * u, y * u);
       g.restore();
     });
-  } else if (i === 2) {     // we call first
-    label(L('СВЯЗЬ', 'CONTACT'), -250);
-    text(L('Выходим на связь', 'We get in touch'), -110, 80, 700, INK);
-    text(L('первыми', 'first'), -10, 80, 700, ACC);
-    text(L('если меняется рынок или', 'when markets shift or'), 124, 50, 500, MUTED);
-    text(L('в портфеле важное событие', 'your portfolio needs it'), 178, 50, 500, MUTED);
+  } else if (i === 2) {     // quarterly portfolio report
+    label(L('ОТЧЁТ', 'REPORT'), -250);
+    text(L('Отчёт о портфеле', 'Portfolio report'), -110, 80, 700, INK);
+    text(L('раз в квартал', 'every quarter'), -10, 80, 700, ACC);
+    text(L('позиции, движения', 'holdings, movements'), 124, 50, 500, MUTED);
+    text(L('по счёту и комиссии', 'and fees'), 178, 50, 500, MUTED);
   } else if (i === 3) {     // part of our income depends on the result: success fee only on growth above the previous high
     label(L('РЕЗУЛЬТАТ', 'RESULT'), -250);
     text(L('Часть нашего дохода', 'Part of our income'), -160, 70, 700, INK);
